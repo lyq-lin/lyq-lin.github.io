@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/128x128.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"joestudy.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="前言在MySQL8.0中连接JDBC与以往有所不同，接下来博主将把学到的MySQL8.0连接JDBC的基本环境搭建以及注意事项记录下来，分享给大家以供参考">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java学习之旅:jdbc连接MySQL8.0">
+<meta property="og:url" content="http://joestudy.xyz/2021/02/17/java%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%97%85%EF%BC%9Ajdbc%E8%BF%9E%E6%8E%A5MySQL8.0/index.html">
+<meta property="og:site_name" content="JoeStudy Blog">
+<meta property="og:description" content="前言在MySQL8.0中连接JDBC与以往有所不同，接下来博主将把学到的MySQL8.0连接JDBC的基本环境搭建以及注意事项记录下来，分享给大家以供参考">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s3.ax1x.com/2021/02/18/yWLiAe.md.png">
+<meta property="og:image" content="https://s3.ax1x.com/2021/02/18/yWLFtH.png">
+<meta property="og:image" content="https://s3.ax1x.com/2021/02/18/yWLE9A.md.png">
+<meta property="og:image" content="https://s3.ax1x.com/2021/02/18/yWLV1I.png">
+<meta property="og:image" content="https://s3.ax1x.com/2021/02/18/yWLC7D.png">
+<meta property="article:published_time" content="2021-02-17T15:01:55.000Z">
+<meta property="article:modified_time" content="2021-02-22T02:14:17.602Z">
+<meta property="article:author" content="啊渝">
+<meta property="article:tag" content="Java学习之旅">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s3.ax1x.com/2021/02/18/yWLiAe.md.png">
+
+<link rel="canonical" href="http://joestudy.xyz/2021/02/17/java%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%97%85%EF%BC%9Ajdbc%E8%BF%9E%E6%8E%A5MySQL8.0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>java学习之旅:jdbc连接MySQL8.0 | JoeStudy Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">JoeStudy Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不积跬步，无以至千里</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://joestudy.xyz/2021/02/17/java%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%97%85%EF%BC%9Ajdbc%E8%BF%9E%E6%8E%A5MySQL8.0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/author.jpg">
+      <meta itemprop="name" content="啊渝">
+      <meta itemprop="description" content="Life is a fucking movie">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="JoeStudy Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          java学习之旅:jdbc连接MySQL8.0
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-02-17 23:01:55" itemprop="dateCreated datePublished" datetime="2021-02-17T23:01:55+08:00">2021-02-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-22 10:14:17" itemprop="dateModified" datetime="2021-02-22T10:14:17+08:00">2021-02-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">软件安装与使用</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在MySQL8.0中连接JDBC与以往有所不同，接下来博主将把学到的MySQL8.0连接JDBC的基本环境搭建以及注意事项记录下来，分享给大家以供参考</p>
+<a id="more"></a>
+
+<p>准备工作:</p>
+<ul>
+<li>基本编程基础</li>
+<li>MySQL8.0+</li>
+<li>mysql-connector-java的jar包</li>
+</ul>
+<p>环境及配置：</p>
+<ol>
+<li>开启MySQL服务</li>
+<li>连接代码参数</li>
+</ol>
+<h2 id="MYSQL8-0-："><a href="#MYSQL8-0-：" class="headerlink" title="MYSQL8.0+："></a>MYSQL8.0+：</h2><p>本文使用的是MySQL8.0.19进行记录</p>
+<p>官网下载：<a target="_blank" rel="noopener" href="https://dev.mysql.com/downloads/installer/">https://dev.mysql.com/downloads/installer/</a></p>
+<p>MySQL的安装–&gt;自行百度教程</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/yWLiAe"><img src="https://s3.ax1x.com/2021/02/18/yWLiAe.md.png" alt="yWLiAe.md.png"></a></p>
+<h2 id="mysql-connector-java的jar包："><a href="#mysql-connector-java的jar包：" class="headerlink" title="mysql-connector-java的jar包："></a>mysql-connector-java的jar包：</h2><p>手动下载，添加jar包：<a target="_blank" rel="noopener" href="https://static.runoob.com/download/mysql-connector-java-8.0.19.jar">https://static.runoob.com/download/mysql-connector-java-8.0.19.jar</a></p>
+<p>在你的项目中选择存放资源的文件夹，新建lib目录：</p>
+<p>​                                                                <a target="_blank" rel="noopener" href="https://imgchr.com/i/yWLFtH"><img src="https://s3.ax1x.com/2021/02/18/yWLFtH.png" alt="yWLFtH.png"></a></p>
+<p>将jar包导入到lib目录下，随后选择lib项目右键点击<strong>Add as Library</strong></p>
+<h2 id="配置："><a href="#配置：" class="headerlink" title="配置："></a>配置：</h2><ol>
+<li><p><strong>开启MySQL服务</strong></p>
+<p>​    win10右键点击下方任务栏，打开任务管理器</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/yWLE9A"><img src="https://s3.ax1x.com/2021/02/18/yWLE9A.md.png" alt="yWLE9A.md.png"></a></p>
+<p>​    </p>
+<p>随后点击文件–&gt;运行新项目，勾选以管理员身份运行</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/yWLV1I"><img src="https://s3.ax1x.com/2021/02/18/yWLV1I.png" alt="yWLV1I.png"></a></p>
+<p>输入 <code>net start mysql80</code> 开启mysql服务 ，mysql80是安装的时候，设置的服务名。</p>
+<p>输入 <code>net stop mysql80</code> 关闭mysql服务 。</p>
+<p>​    <a target="_blank" rel="noopener" href="https://imgchr.com/i/yWLC7D"><img src="https://s3.ax1x.com/2021/02/18/yWLC7D.png" alt="yWLC7D.png"></a></p>
+<p>如没有打开管理员权限则会出现拒绝访问的情况</p>
+<p><strong>开启mysql服务后就可以关闭cmd框，然后开始写代码了。</strong></p>
+<p>​    </p>
+<p>​    </p>
+<p>​    </p>
+<p>​    </p>
+</li>
+<li><p><strong>连接代码参数设置</strong></p>
+</li>
+</ol>
+<ul>
+<li>MYSQL8.0+使用jbdc的连接，与以往版本的不同</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">连接</th>
+<th align="center">MYSQL8.0+</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">forname</td>
+<td align="center">Class.forName(<code>com.mysql.cj.jdbc.Driver</code>）</td>
+</tr>
+<tr>
+<td align="center">URL设置时区</td>
+<td align="center">serverTimezone=UTC</td>
+</tr>
+<tr>
+<td align="center">设置编码（防止中文乱码）</td>
+<td align="center">characterEncoding=UTF-8</td>
+</tr>
+</tbody></table>
+<ul>
+<li>上面2个参数不设置好会报<code>ClassNotFoundException</code>的异常</li>
+</ul>
+<p>通常情况下连接url设置成这样即可</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jdbc:mysql:&#x2F;&#x2F;localhost:3306&#x2F;mysqlname?useSSL&#x3D;false&amp;serverTimezone&#x3D;UTC&amp;characterEncoding&#x3D;UTF-8</span><br></pre></td></tr></table></figure>
+
+
+<table>
+<thead>
+<tr>
+<th align="center">url参数</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">localhost</td>
+<td align="center">localhost是本机地址127.0.0.1</td>
+</tr>
+<tr>
+<td align="center">:3306</td>
+<td align="center">端口名，是mysql开启的服务，如果上述（配置一）的mysql服务未开启，会报<code>com.mysql.cj.jdbc.exceptions.CommunicationsException: Communications link failure</code> 的异常</td>
+</tr>
+<tr>
+<td align="center">mysqlname</td>
+<td align="center">数据库的名字，如果没有此数据库会报<code>SQLSyntaxErrorException: Unknown database &#39;xxx&#39;</code>，的异常</td>
+</tr>
+<tr>
+<td align="center">useSSL=false</td>
+<td align="center">在web领域要用到，指是否开启ssl安全连接，但MySQL 8.0 以上版本不需要建立 SSL 连接，需要关闭。</td>
+</tr>
+<tr>
+<td align="center">serverTimezone=UTC</td>
+<td align="center">设置时区，不设置会报错</td>
+</tr>
+</tbody></table>
+<h2 id="JDBC快速入门演示："><a href="#JDBC快速入门演示：" class="headerlink" title="JDBC快速入门演示："></a>JDBC快速入门演示：</h2><p>这里博主演示一个准备好的数据库，数据库名为db2，测试表为emp</p>
+<table>
+<thead>
+<tr>
+<th align="center">会用到的方法</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Class.<strong>forName</strong>()</td>
+<td align="center">返回一个类，作用是要求JVM查找并加载指定的类，也就是说JVM会执行该类的静态代码段。</td>
+</tr>
+<tr>
+<td align="center">DriverManager.<strong>getConnection</strong>(url, user, pwd)</td>
+<td align="center">返回Connection对象，用于连接数据库</td>
+</tr>
+<tr>
+<td align="center">connection.<strong>createStatement</strong>()</td>
+<td align="center">返回Statement对象，用于查询数据库操作</td>
+</tr>
+<tr>
+<td align="center">statement.<strong>executeUpdate</strong>(str)</td>
+<td align="center">执行查询语句</td>
+</tr>
+</tbody></table>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.sql.*; <span class="comment">//导入包</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * JDBC快速入门</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">jdbcDemo1</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">//1.导入驱动jar包</span></span><br><span class="line">        <span class="comment">//2.注册驱动</span></span><br><span class="line">        <span class="comment">//mysql8.0后从com.mysql.jdbc.Driver更新为com.mysql.cj.jdbc.Driver</span></span><br><span class="line">        Class.forName(<span class="string">&quot;com.mysql.cj.jdbc.Driver&quot;</span>); <span class="comment">//如果没有手动注册驱动,则mysql5后的驱动jar包会自动帮你注册</span></span><br><span class="line">        <span class="comment">//3.获取数据库连接对象</span></span><br><span class="line">        Connection conn = DriverManager.getConnection(<span class="string">&quot;jdbc:mysql://localhost:3306/数据库名称?useSSL=false&amp;serverTimezone=UTC&amp;characterEncoding=UTF-8&quot;</span>, <span class="string">&quot;MySQL用户名&quot;</span>, <span class="string">&quot;MySQL密码&quot;</span>);</span><br><span class="line">        <span class="comment">//4.定义sql语句</span></span><br><span class="line">        String str = <span class="string">&quot;update emp set salary=1000 where id=1001&quot;</span>; <span class="comment">//把emp表里id为1001的salary数据更新为1000</span></span><br><span class="line">        <span class="comment">//5.获取执行sql 的对象 Statement</span></span><br><span class="line">        Statement stmt = conn.createStatement();</span><br><span class="line">        <span class="comment">//6.执行sql</span></span><br><span class="line">        <span class="keyword">int</span> count = stmt.executeUpdate(str); <span class="comment">//返回受影响行数</span></span><br><span class="line">        <span class="comment">//7.处理结果</span></span><br><span class="line">        System.out.println(count); </span><br><span class="line">        <span class="comment">//8.释放资源</span></span><br><span class="line">        stmt.close();</span><br><span class="line">        conn.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>好了，以上就是MySQL8.0+连接JDBC的方法，感谢各位的观看！</p>
+<hr>
+<p>而后是我在做一个web小练习时使用druid及配置文件连接JDBC遇到的一个警告信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">严重: testWhileIdle is true, validationQuery not set</span><br></pre></td></tr></table></figure>
+
+
+<p>原来配置druid.properties文件配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">driverClassName&#x3D;com.mysql.cj.jdbc.Driver</span><br><span class="line">url&#x3D;jdbc:mysql:&#x2F;&#x2F;localhost:3306&#x2F;day14?useSSL&#x3D;false&amp;serverTimezone&#x3D;UTC&amp;characterEncoding&#x3D;UTF-8</span><br><span class="line">username&#x3D;root</span><br><span class="line">password&#x3D;密码</span><br></pre></td></tr></table></figure>
+
+
+<p>在properties配置文件下添加一些配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">filters&#x3D;stat</span><br><span class="line">initialSize&#x3D;2</span><br><span class="line">maxActive&#x3D;300</span><br><span class="line">maxWait&#x3D;60000</span><br><span class="line">timeBetweenEvictionRunsMillis&#x3D;60000</span><br><span class="line">minEvictableIdleTimeMillis&#x3D;300000</span><br><span class="line">validationQuery&#x3D;SELECT 1</span><br><span class="line">testWhileIdle&#x3D;true</span><br><span class="line">testOnBorrow&#x3D;false</span><br><span class="line">testOnReturn&#x3D;false</span><br><span class="line">poolPreparedStatements&#x3D;false</span><br><span class="line">maxPoolPreparedStatementPerConnectionSize&#x3D;200</span><br></pre></td></tr></table></figure>
+<p>再次运行便不再报错。</p>
+<hr>
+<h6 id="附上一些名词解释："><a href="#附上一些名词解释：" class="headerlink" title="附上一些名词解释："></a>附上一些名词解释：</h6><p>  validationQuery = “SELECT 1” ：验证连接是否可用，使用的SQL语句</p>
+<p>  testWhileIdle = “true”：指明连接是否被空闲连接回收器(如果有)进行检验.如果检测失败,则连接将被从池中去除</p>
+<p>  testOnBorrow = “false”：借出连接时不要测试，否则很影响性能</p>
+<p>  timeBetweenEvictionRunsMillis = “30000”：每30秒运行一次空闲连接回收器</p>
+<p>  minEvictableIdleTimeMillis = “1800000”：池中的连接空闲30分钟后被回收,默认值就是30分钟。</p>
+<p>  numTestsPerEvictionRun=”3”：在每次空闲连接回收器线程(如果有)运行时检查的连接数量，默认值就是3</p>
+<h6 id="解释："><a href="#解释：" class="headerlink" title="解释："></a>解释：</h6><p>配置timeBetweenEvictionRunsMillis = “30000”后，每30秒运行一次空闲连接回收器（独立线程）。并每次检查3个连接，如果连接空闲时间超过30分钟就销毁。销毁连接后，连接数量就少了，如果小于minIdle数量，就新建连接，维护数量不少于minIdle，过行了新老更替。</p>
+<p>  testWhileIdle = “true” 表示每30秒，取出3条连接，使用validationQuery = “SELECT 1” 中的SQL进行测试 ，测试不成功就销毁连接。销毁连接后，连接数量就少了，如果小于minIdle数量，就新建连接。</p>
+<p>  testOnBorrow = “false” 一定要配置，因为它的默认值是true。false表示每次从连接池中取出连接时，不需要执行validationQuery = “SELECT 1” 中的SQL进行测试。若配置为true,对性能有非常大的影响，性能会下降7-10倍。所在一定要配置为false.</p>
+<p>每30秒，取出numTestsPerEvictionRun条连接（本例是3，也是默认值），发出”SELECT 1” SQL语句进行测试 ，测试过的连接不算是“被使用”了，还算是空闲的。连接空闲30分钟后会被销毁</p>
+<hr>
+<p>感谢各位观看！🤣</p>
+
+    </div>
+
+    
+    
+    
+
+
+<div>
+  
+    <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+
+  
+</div>
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>啊渝
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://joestudy.xyz/2021/02/17/java%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%97%85%EF%BC%9Ajdbc%E8%BF%9E%E6%8E%A5MySQL8.0/" title="java学习之旅:jdbc连接MySQL8.0">http://joestudy.xyz/2021/02/17/java学习之旅：jdbc连接MySQL8.0/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Java%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%97%85/" rel="tag"><i class="fa fa-tag"></i> Java学习之旅</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/02/17/java%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%97%85%EF%BC%9A%E5%85%B3%E4%BA%8Eidea2020%E5%88%9B%E5%BB%BAservlet/" rel="prev" title="java学习之旅:关于idea2020创建servlet">
+      <i class="fa fa-chevron-left"></i> java学习之旅:关于idea2020创建servlet
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/02/19/%E6%B5%85%E5%AD%A6%E9%9A%8F%E8%AE%B0%EF%BC%9Ahttp%E5%8D%8F%E8%AE%AE/" rel="next" title="浅学随记：http协议">
+      浅学随记：http协议 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-text">前言</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#MYSQL8-0-%EF%BC%9A"><span class="nav-text">MYSQL8.0+：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mysql-connector-java%E7%9A%84jar%E5%8C%85%EF%BC%9A"><span class="nav-text">mysql-connector-java的jar包：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%EF%BC%9A"><span class="nav-text">配置：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JDBC%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%E6%BC%94%E7%A4%BA%EF%BC%9A"><span class="nav-text">JDBC快速入门演示：</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%99%84%E4%B8%8A%E4%B8%80%E4%BA%9B%E5%90%8D%E8%AF%8D%E8%A7%A3%E9%87%8A%EF%BC%9A"><span class="nav-text">附上一些名词解释：</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%A7%A3%E9%87%8A%EF%BC%9A"><span class="nav-text">解释：</span></a></li></ol></li></ol></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="啊渝"
+      src="/images/author.jpg">
+  <p class="site-author-name" itemprop="name">啊渝</p>
+  <div class="site-description" itemprop="description">Life is a fucking movie</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/lyq-lin" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;lyq-lin" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/p/1005055688490853" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;p&#x2F;1005055688490853" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">啊渝</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">14k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">13 分钟</span>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='150' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>
+
+</body>
+</html>

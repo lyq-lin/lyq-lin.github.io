@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/128x128.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"joestudy.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="前言前段时间学习HTTP协议内容，它的一些格式，内容，包括Request和Response，现做一份总结，对自己的学习做一份记录。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅学随记：http协议">
+<meta property="og:url" content="http://joestudy.xyz/2021/02/19/%E6%B5%85%E5%AD%A6%E9%9A%8F%E8%AE%B0%EF%BC%9Ahttp%E5%8D%8F%E8%AE%AE/index.html">
+<meta property="og:site_name" content="JoeStudy Blog">
+<meta property="og:description" content="前言前段时间学习HTTP协议内容，它的一些格式，内容，包括Request和Response，现做一份总结，对自己的学习做一份记录。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s3.ax1x.com/2021/02/22/y73vFJ.md.png">
+<meta property="og:image" content="https://s3.ax1x.com/2021/02/22/y73Xo4.png">
+<meta property="article:published_time" content="2021-02-19T08:57:12.000Z">
+<meta property="article:modified_time" content="2021-02-22T02:57:46.944Z">
+<meta property="article:author" content="啊渝">
+<meta property="article:tag" content="http">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s3.ax1x.com/2021/02/22/y73vFJ.md.png">
+
+<link rel="canonical" href="http://joestudy.xyz/2021/02/19/%E6%B5%85%E5%AD%A6%E9%9A%8F%E8%AE%B0%EF%BC%9Ahttp%E5%8D%8F%E8%AE%AE/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>浅学随记：http协议 | JoeStudy Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">JoeStudy Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不积跬步，无以至千里</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://joestudy.xyz/2021/02/19/%E6%B5%85%E5%AD%A6%E9%9A%8F%E8%AE%B0%EF%BC%9Ahttp%E5%8D%8F%E8%AE%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/author.jpg">
+      <meta itemprop="name" content="啊渝">
+      <meta itemprop="description" content="Life is a fucking movie">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="JoeStudy Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          浅学随记：http协议
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-02-19 16:57:12" itemprop="dateCreated datePublished" datetime="2021-02-19T16:57:12+08:00">2021-02-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-22 10:57:46" itemprop="dateModified" datetime="2021-02-22T10:57:46+08:00">2021-02-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%BC%96%E7%A8%8B%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">编程学习</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>前段时间学习HTTP协议内容，它的一些格式，内容，包括Request和Response，现做一份总结，对自己的学习做一份记录。</p>
+<a id="more"></a>
+
+
+
+
+
+<p>本文包括以下内容</p>
+<ol>
+<li><p><a href="httpone">http是什么</a></p>
+<p>​        概念    </p>
+<p>​        特点</p>
+</li>
+<li><p>http的模型</p>
+<p>​    请求</p>
+<p>​        格式：</p>
+<p>​            请求行</p>
+<p>​            请求体</p>
+<p>​            请求头</p>
+<p>​    响应</p>
+<p>​        格式：</p>
+<p>​            响应行</p>
+<p>​            响应体</p>
+<p>​            响应头</p>
+</li>
+</ol>
+<div id="httpone"> </div>
+
+<h1 id="http是什么？"><a href="#http是什么？" class="headerlink" title="http是什么？"></a>http是什么？</h1><h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><p><strong>超文本传输协议（Hypertext Transfer Protocol，HTTP）</strong>是一个简单的请求-响应协议,它通常运行在<a target="_blank" rel="noopener" href="https://baike.baidu.com/item/TCP/33012">TCP</a>之上。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">传输协议就是用来定义客户端和服务器端通信时，发送数据的格式</span><br></pre></td></tr></table></figure>
+<p>而<strong>http</strong>它指定了客户端可能发送给服务器什么样的消息以及得到什么样的响应。请求和响应消息的头以<a target="_blank" rel="noopener" href="https://baike.baidu.com/item/ASCII/309296">ASCII</a>形式给出；而消息内容则具有一个类似<a target="_blank" rel="noopener" href="https://baike.baidu.com/item/MIME/2900607">MIME</a>的格式。这个简单模型是早期<a target="_blank" rel="noopener" href="https://baike.baidu.com/item/Web/150564">Web</a>成功的有功之臣，因为它使开发和部署非常地直截了当。</p>
+<h3 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h3><ol>
+<li>​                基于TCP/IP的高级协议</li>
+<li>​                默认端口号:80</li>
+<li>​                基于请求/响应模型的:一次请求对应一次响应</li>
+<li>​                无状态的：每次请求之间相互独立，不能交互数据</li>
+</ol>
+<div id="httptwo"></div>
+# http的模型
+
+<p>http的模型分为两种，一直是<strong>请求</strong>模型，一种是<strong>响应</strong>模型，他们之间是一一对应的，也就是一次请求对应一次响应。</p>
+<h3 id="request对象和response对象的原理"><a href="#request对象和response对象的原理" class="headerlink" title="request对象和response对象的原理"></a>request对象和response对象的原理</h3><ol>
+<li><p> request和response对象是由服务器创建的。我们来使用它们</p>
+</li>
+<li><p>request对象是来获取请求消息</p>
+</li>
+</ol>
+<p>​        response对象是来设置响应消息</p>
+<h3 id="请求模型Request"><a href="#请求模型Request" class="headerlink" title="请求模型Request"></a>请求模型Request</h3><p>请求消息：客户端发送给服务器端的数据</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/y73vFJ"><img src="https://s3.ax1x.com/2021/02/22/y73vFJ.md.png" alt="y73vFJ.md.png"></a></p>
+<h5 id="继承体结构"><a href="#继承体结构" class="headerlink" title="继承体结构:"></a>继承体结构:</h5><p>​            ServletRequest  -&gt;  HttpServletRequest -&gt;  org.apache.catalina.connector.RequestFacade 类(tomcat)</p>
+<p>​        接口ServletRequest 被子接口HttpServletRequest继承，而最终由tomcat(一个免费的开放源代码的轻量级Web 应用服务器)创建的org.apache.catalina.connector.RequestFacade 类实现</p>
+<p><strong>请求行</strong>：</p>
+<p>①是请求方法，GET和POST是最常见的HTTP方法，除此以外还包括DELETE、HEAD、OPTIONS、PUT、TRACE。</p>
+<p>②为请求对应的URL地址，它和报文头的Host属性组成完整的请求URL。</p>
+<p>③是协议名称及版本号。</p>
+<h6 id="获取请求行数据"><a href="#获取请求行数据" class="headerlink" title="获取请求行数据"></a><em>获取请求行数据</em></h6><ol>
+<li>获取请求方式 ：GET</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">String <span class="title">getMethod</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>(*)获取虚拟目录：/day14</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">String <span class="title">getContextPath</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>获取Servlet路径: /demo1</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">String <span class="title">getServletPath</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>获取get方式请求参数：name=zhangsan</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">String <span class="title">getQueryString</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+<ol start="5">
+<li>(*)获取请求URI：/day14/demo1</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">String <span class="title">getRequestURI</span><span class="params">()</span>        /day14/demo1</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">StringBuffer <span class="title">getRequestURL</span><span class="params">()</span>   http:<span class="comment">//localhost/day14/demo1</span></span></span><br></pre></td></tr></table></figure>
+<p>* URL:统一资源定位符 ： <a target="_blank" rel="noopener" href="http://localhost/day14/demo1">http://localhost/day14/demo1</a>    中华人民共和国</p>
+<p>* URI:统一资源标识符 :   /day14/demo1                                  共和国</p>
+<p>注意：URI是比URL范围大的</p>
+<ol start="6">
+<li>获取协议及版本：HTTP/1.1</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">String <span class="title">getProtocol</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+<ol start="7">
+<li>获取客户机的IP地址：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">String <span class="title">getRemoteAddr</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<p><strong>请求头：</strong></p>
+<p>④是HTTP的报文头，报文头包含若干个属性，格式为“属性名:属性值”，服务端据此获取客户端的信息。</p>
+<p>与缓存相关的规则信息，均包含在header中</p>
+<h6 id="获取请求头数据"><a href="#获取请求头数据" class="headerlink" title="获取请求头数据"></a><em>获取请求头数据</em></h6><p>通过请求头的名称获取请求头的值</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">String <span class="title">getHeader</span><span class="params">(String name)</span> </span></span><br></pre></td></tr></table></figure>
+<p>获取所有的请求头名称</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Enumeration&lt;String&gt; <span class="title">getHeaderNames</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<p><strong>请求体：</strong></p>
+<p>⑤是报文体，它将一个页面表单中的组件值通过param1=value1&amp;param2=value2的键值对形式编码成一个格式化串，它承载多个请求参数的数据。不但报文体可以传递请求参数，请求URL也可以通过类似于“/chapter15/user.html? param1=value1&amp;param2=value2”的方式传递请求参数。</p>
+<p><strong>只有POST请求方式，才有请求体，在请求体中封装了POST请求的请求参数</strong></p>
+<h6 id="获取请求体数据"><a href="#获取请求体数据" class="headerlink" title="获取请求体数据"></a><em>获取请求体数据</em></h6><ol>
+<li><p>获取流对象</p>
+<p>获取字符输入流，只能操作字符数据</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">BufferedReader <span class="title">getReader</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+<p>获取字节输入流，可以操作所有类型数据</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">ServletInputStream <span class="title">getInputStream</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+
+</li>
+<li><p>再从流对象中拿数据</p>
+</li>
+</ol>
+<p>例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获取请求消息体</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//1.获取字符流</span></span><br><span class="line">BufferedReader br = req.getReader();</span><br><span class="line"><span class="comment">//2.读取数据</span></span><br><span class="line">String line = <span class="keyword">null</span>;</span><br><span class="line"><span class="keyword">while</span> ((line = br.readLine()) != <span class="keyword">null</span>) &#123;</span><br><span class="line">    System.out.println(line);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="响应模型Response"><a href="#响应模型Response" class="headerlink" title="响应模型Response"></a>响应模型Response</h3><p>响应消息：服务器端发送给客户端的数据</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/y73Xo4"><img src="https://s3.ax1x.com/2021/02/22/y73Xo4.png" alt="y73Xo4.png"></a></p>
+<p><strong>响应行</strong></p>
+<ol>
+<li><p>组成：协议/版本 响应状态码 状态码描述</p>
+</li>
+<li><p>响应状态码：服务器告诉客户端浏览器本次请求和响应的一个状态。</p>
+<p>\1. 状态码都是3位数字</p>
+<p>\2. 分类：</p>
+<p>​    1. 1xx：服务器接收客户端消息，但没有接受完成，等待一段时间后，发送1xx多状态码</p>
+<p>​    2. 2xx：成功。代表：200</p>
+<p>​    3. 3xx：重定向。代表：302(重定向)，304(访问缓存)</p>
+<p>​    4. 4xx：客户端错误。</p>
+<p>​        * 代表：</p>
+<p>​            * 404:（请求路径没有对应的资源） </p>
+<p>​            * 405：请求方式没有对应的doXxx方法</p>
+<p>​    5. 5xx：服务器端错误。代表：500(服务器内部出现异常)</p>
+</li>
+</ol>
+<p><em>设置响应行</em></p>
+<p>​        设置状态码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">setStatus</span><span class="params">(<span class="keyword">int</span> sc)</span> </span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<p><strong>响应体</strong></p>
+<p>​    传输的数据</p>
+<p>​    </p>
+<p>​    <em>设置响应体</em></p>
+<p>​        \1. 获取输出流</p>
+<p>​            * 字符输出流：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">PrintWriter <span class="title">getWriter</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+<p>​            * 字节输出流：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">ServletOutputStream <span class="title">getOutputStream</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+<p>​        \2. 使用输出流，将数据输出到客户端浏览器</p>
+<p><strong>响应头</strong></p>
+<p>格式：    头名称:值</p>
+<p>常见的响应头：</p>
+<ol>
+<li><p>Content-Type：服务器告诉客户端本次响应体数据格式以及编码格式</p>
+</li>
+<li><p>Content-disposition：服务器告诉客户端以什么格式打开响应体数据</p>
+<p>* 值：</p>
+<p>* in-line:默认值,在当前页面内打开</p>
+<p>* attachment;filename=xxx：以附件形式打开响应体。–&gt; 用于文件下载</p>
+</li>
+</ol>
+<p><em>设置响应头</em></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setHeader(String name, String value) </span><br></pre></td></tr></table></figure>
+
+
+<p>例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//设置状态码</span></span><br><span class="line">resp.setStatus(<span class="number">302</span>);</span><br><span class="line"><span class="comment">//设置地址</span></span><br><span class="line">resp.setHeader(<span class="string">&quot;location&quot;</span>,<span class="string">&quot;/day15/responseDemo03&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+
+<hr>
+<h4 id="forward-和-redirect-区别"><a href="#forward-和-redirect-区别" class="headerlink" title="forward 和 redirect 区别"></a>forward 和 redirect 区别</h4><p>重定向的特点：redirect</p>
+<ol>
+<li><p>地址栏发生变化</p>
+</li>
+<li><p>重定向可以访问其他站点(服务器)的资源</p>
+</li>
+<li><p>重定向是两次请求，不能使用request对象来共享数据</p>
+</li>
+</ol>
+<p>转发的特点：forward</p>
+<ol>
+<li><p>转发地址栏路径不变</p>
+</li>
+<li><p>转发只能访问当前服务器下的资源</p>
+</li>
+<li><p>转发是一次请求，可以使用request对象来共享数据</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+
+<div>
+  
+    <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+
+  
+</div>
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>啊渝
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://joestudy.xyz/2021/02/19/%E6%B5%85%E5%AD%A6%E9%9A%8F%E8%AE%B0%EF%BC%9Ahttp%E5%8D%8F%E8%AE%AE/" title="浅学随记：http协议">http://joestudy.xyz/2021/02/19/浅学随记：http协议/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/http/" rel="tag"><i class="fa fa-tag"></i> http</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/02/17/java%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%97%85%EF%BC%9Ajdbc%E8%BF%9E%E6%8E%A5MySQL8.0/" rel="prev" title="java学习之旅:jdbc连接MySQL8.0">
+      <i class="fa fa-chevron-left"></i> java学习之旅:jdbc连接MySQL8.0
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/03/02/java%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%97%85%EF%BC%9A%E5%85%B3%E4%BA%8Ejsp%E4%BD%BF%E7%94%A8out.print%E6%96%B9%E6%B3%95%E9%94%99%E8%AF%AF%E9%97%AE%E9%A2%98/" rel="next" title="java学习之旅:关于jsp使用out.print方法错误问题">
+      java学习之旅:关于jsp使用out.print方法错误问题 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#http%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-text">http是什么？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5"><span class="nav-text">概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%89%B9%E7%82%B9"><span class="nav-text">特点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#request%E5%AF%B9%E8%B1%A1%E5%92%8Cresponse%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%8E%9F%E7%90%86"><span class="nav-text">request对象和response对象的原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%B7%E6%B1%82%E6%A8%A1%E5%9E%8BRequest"><span class="nav-text">请求模型Request</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BB%A7%E6%89%BF%E4%BD%93%E7%BB%93%E6%9E%84"><span class="nav-text">继承体结构:</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E8%AF%B7%E6%B1%82%E8%A1%8C%E6%95%B0%E6%8D%AE"><span class="nav-text">获取请求行数据</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E8%AF%B7%E6%B1%82%E5%A4%B4%E6%95%B0%E6%8D%AE"><span class="nav-text">获取请求头数据</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E8%AF%B7%E6%B1%82%E4%BD%93%E6%95%B0%E6%8D%AE"><span class="nav-text">获取请求体数据</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%93%8D%E5%BA%94%E6%A8%A1%E5%9E%8BResponse"><span class="nav-text">响应模型Response</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#forward-%E5%92%8C-redirect-%E5%8C%BA%E5%88%AB"><span class="nav-text">forward 和 redirect 区别</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="啊渝"
+      src="/images/author.jpg">
+  <p class="site-author-name" itemprop="name">啊渝</p>
+  <div class="site-description" itemprop="description">Life is a fucking movie</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/lyq-lin" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;lyq-lin" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/p/1005055688490853" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;p&#x2F;1005055688490853" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">啊渝</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">14k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">13 分钟</span>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='150' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>
+
+</body>
+</html>
